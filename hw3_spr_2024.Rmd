@@ -1,9 +1,9 @@
 ---
 title: " Modern Data Mining, HW 3"
 author:
-- Group Member 1
-- Group Member 2
-- Group Member 3
+- Group Member Mahika Calyanakoti
+- Group Member Graham Branscom
+- Group Member Andrew Raines
 date: '11:59 pm, 03/17, 2024'
 output:
   pdf_document:
