@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+
+./data/covid_rates.csv
+./data/us_counties.csv
