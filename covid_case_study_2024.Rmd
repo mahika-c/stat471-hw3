@@ -115,9 +115,12 @@ dim(county_data)
 
 We now look at covid_rate.
 
-There are 1,008,983 rows for counties at different days (i.e. each county has many rows, one for each day). Each row has 7 different variables. The columns are listed below. It provides cumulative counts of cases (infections) and fatalities (deaths).
+There are 1,008,984 rows for counties at different days (i.e. each county has many rows, one for each day). Each row has 7 different variables. The columns are listed below. It provides cumulative counts of cases (infections) and fatalities (deaths).
 
 ```{r}
+rows_with_na <- covid_rate[apply(is.na(covid_rate), 1, any), ]
+dim(rows_with_na) # no rows have NA values
+str(covid_rate)
 dim(covid_rate)
 ```
 
