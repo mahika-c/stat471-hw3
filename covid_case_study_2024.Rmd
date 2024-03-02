@@ -188,8 +188,6 @@ i)  Plot **new** COVID cases in NY, WA and FL by state and by day. Any irregular
 
 ii) Create **weekly new** cases per 100k `weekly_case_per100k`. Plot the spaghetti plots of `weekly_case_per100k` by state. Use `TotalPopEst2019` as population.
 
-
-
 ```{r}
   
   # calculate the weeks for each date
@@ -257,7 +255,100 @@ Based on the plot in part ii, we can see a COVID case trend of three waves, with
 
 i)  For each month in 2020, plot the monthly deaths per 100k heatmap by state on US map. Use the same color range across months. (Hints: Set `limits` argument in `scale_fill_gradient()` or use `facet_wrap()`; use `lubridate::month()` and `lubridate::year()` to extract month and year from date; use `tidyr::complete(state, month, fill = list(new_case_per100k = NA))` to complete the missing months with no cases.)
 
+```{r}
+  # calculate the weeks for each date
+  covid_rate <- covid_rate %>%
+    group_by(State) %>%
+    mutate(month = as.integer(lubridate::month(date))) %>%
+    ungroup()
+
+  # finding the cum_deaths for each county for each month
+  monthly_deaths_by_county <- covid_rate %>%
+    group_by(FIPS, State, month) %>%
+    summarise(monthly_cum_deaths = max(cum_deaths, na.rm = TRUE)) %>%
+    ungroup()
+  
+  # sum the monthly cum deaths across all counties within each state
+  monthly_deaths_by_state <- monthly_deaths_by_county %>%
+    group_by(State, month) %>%
+    summarise(state_monthly_cum_deaths = sum(monthly_cum_deaths, na.rm = TRUE)) %>%
+    ungroup()
+  
+  # calculate the monthly deaths for each state = difference in cumulative deaths between consecutive monthly
+  monthly_new_deaths_per_state <- monthly_deaths_by_state %>%
+    arrange(State, month) %>%
+    group_by(State) %>%
+    mutate(monthly_new_deaths = state_monthly_cum_deaths - lag(state_monthly_cum_deaths)) %>%
+    # removing the first week for each state bc it lacks a previous week
+    filter(!is.na(monthly_new_deaths))
+  
+  # handling negative increases
+  monthly_new_deaths_per_state$monthly_new_deaths[monthly_new_deaths_per_state$monthly_new_deaths < 0] <- 0
+  
+  # calculate the total population for each state
+  state_population <- covid_rate %>%
+    distinct(State, FIPS, .keep_all = TRUE) %>%
+    group_by(State) %>%
+    summarize(Total_Population = sum(TotalPopEst2019))
+  state_population
+  
+  # calculate the total deaths per state for each month
+  state_deaths <- covid_rate %>%
+    group_by(State, month) %>%
+    summarise(total_cum_deaths = sum(cum_deaths, na.rm = FALSE)) %>%
+    ungroup()
+
+  # merge the dataframes and calculate the new cases per 100k for each state
+  state_deaths <- merge(state_deaths, state_population, by = "State", all.x = TRUE)
+  monthly_deaths <- merge(monthly_new_deaths_per_state, state_deaths, by = c("State", "month"), all.x = TRUE)
+  monthly_deaths$per100k <- (monthly_deaths$monthly_new_deaths / monthly_deaths$Total_Population) * 100000
+  
+  # plot the spaghettis
+  ggplot(monthly_deaths, aes(x = month, y = per100k, group = State, color = State)) +
+    geom_line() +
+    labs(title = "Monthly COVID-19 Deaths per 100k Population",
+      x = "Monthly",
+      y = "Monthly Deaths per 100k") +
+    theme_minimal()
+
+```
+
+```{r}
+# ensure the dataset has an entry for each state for each month, even if 0 deaths
+monthly_deaths_complete <- monthly_deaths %>%
+  complete(State, month, fill = list(monthly_new_deaths = NA))
+monthly_deaths_complete$state = monthly_deaths_complete$State
+
+# plotting
+plot_usmap(data = monthly_deaths_complete, values = "per100k", lines = "black") +
+  scale_fill_continuous(name = "Deaths per 100k", limits = c(min(monthly_deaths_complete$per100k, na.rm = TRUE), max(monthly_deaths_complete$per100k, na.rm = TRUE)), low = "white", high = "red") +
+  facet_wrap(~month) +
+  theme(legend.position = "right") +
+  labs(title = "Monthly Deaths per 100k by State in 2020")
+```
+
+
 ii) (Optional) Use `plotly` to animate the monthly maps in i). Does it reveal any systematic way to capture the dynamic changes among states? (Hints: Follow *Appendix 3: Plotly heatmap::* in Module 6 regularization lecture to plot the heatmap using `plotly`. Use `frame` argument in `add_trace()` for animation. `plotly` only recognizes abbreviation of state names. Use `unique(us_map(regions = "states") %>% select(abbr, full))` to get the abbreviation and merge with the data to get state abbreviation.)
+
+```{r}
+# # get state abbreviations
+# state_abbreviations <- unique(us_map(regions = "states") %>% select(abbr, full))
+# 
+# # merge state abbreviations with monthly_deaths data
+# monthly_deaths <- merge(monthly_deaths, state_abbreviations, by.x = "State", by.y = "full", all.x = TRUE)
+# 
+# # Plotly animation
+# p <- plot_usmap(data = monthly_deaths, 
+#                 values = "deaths_per_100k",
+#                 color = "blue",
+#                 labels = c(state = "abbr"),
+#                 title = "Monthly Deaths per 100k by State in 2020",
+#                 hoverinfo = "text") %>%
+#   layout(geo = list(scope = 'usa'), showlegend = FALSE) %>%
+#   plotly::animation_frame(~month)
+# p
+```
+
 
 # COVID factor
 
@@ -265,7 +356,39 @@ We now try to build a good parsimonious model to find possible factors related t
 
 i)  Create the response variable `total_death_per100k` as the total of number of COVID deaths per 100k by *Feb 1, 2021*. We suggest to take log transformation as `log_total_death_per100k = log(total_death_per100k + 1)`. Merge `total_death_per100k` to `county_data` for the following analysis.
 
+```{r}
+
+# filter covid_rate data up to Feb 1, 2021
+covid_data_filtered <- covid_rate %>%
+  filter(date <= as.Date("2021-02-01"))
+
+# aggregate to get the total deaths by county
+total_deaths_by_county <- covid_data_filtered %>%
+  group_by(FIPS, County, State, TotalPopEst2019) %>%
+  summarise(total_deaths = max(cum_deaths), .groups = 'drop')
+
+# calculate deaths per 100k 
+total_deaths_by_county <- total_deaths_by_county %>%
+  mutate(total_death_per100k = (total_deaths / TotalPopEst2019) * 100000)
+
+# log transform
+total_deaths_by_county <- total_deaths_by_county %>%
+  mutate(log_total_death_per100k = log(total_death_per100k + 1))
+
+# join the dataframes
+county_data <- county_data %>%
+  left_join(total_deaths_by_county, by = "FIPS")
+
+county_data[, c(1, 2, 3, 214)]
+```
+
+
 ii) Select possible variables in `county_data` as covariates. We provide `county_data_sub`, a subset variables from `county_data`, for you to get started. Please add any potential variables as you wish.
+
+```{r}
+names(county_data)
+```
+
 
     a)  Report missing values in your final subset of variables.
 
