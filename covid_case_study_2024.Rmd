@@ -188,39 +188,70 @@ i)  Plot **new** COVID cases in NY, WA and FL by state and by day. Any irregular
 
 ii) Create **weekly new** cases per 100k `weekly_case_per100k`. Plot the spaghetti plots of `weekly_case_per100k` by state. Use `TotalPopEst2019` as population.
 
-    ```{r}
-    population_data <- covid_rate %>%
-      group_by(State) %>%
-      summarise(total_pop = sum(`TotalPopEst2019`))
-    population_data
 
-    # Calculate weekly new cases per FIPS
-    weekly_cases <- covid_rate %>%
-      group_by(FIPS) %>%
-      mutate(week = lubridate::week(date)) %>%
-      group_by(FIPS, week) %>%
-      summarise(weekly_new_cases = sum(cum_cases)) %>%
-      ungroup()
-    
-    weekly_cases <- merge(weekly_cases, covid_rate[, c("FIPS", "State")], by = "FIPS", all.x = TRUE)
-    weekly_cases
 
-    # Merge with population data
-    weekly_cases <- merge(weekly_cases, population_data, by = "FIPS", all.x = TRUE)
+```{r}
+  
+  # calculate the weeks for each date
+  covid_rate <- covid_rate %>%
+    group_by(State) %>%
+    mutate(week = as.integer(lubridate::week(date))) %>%
+    ungroup()
 
-    # Calculate weekly_case_per100k
-    weekly_cases$weekly_case_per100k <- (weekly_cases$weekly_new_cases / weekly_cases$total_pop) * 100000
+  # finding the cum_cases for each county for each week.
+  weekly_cases_by_county <- covid_rate %>%
+    group_by(FIPS, State, week) %>%
+    summarise(weekly_cum_cases = max(cum_cases, na.rm = TRUE)) %>%
+    ungroup()
+  
+  # sum the weekly cum cases across all counties within each state
+  weekly_cases_by_state <- weekly_cases_by_county %>%
+    group_by(State, week) %>%
+    summarise(state_weekly_cum_cases = sum(weekly_cum_cases, na.rm = TRUE)) %>%
+    ungroup()
+  
+  # calculate the weekly new cases for each state = difference in cumulative cases between consecutive weeks
+  weekly_new_cases_per_state <- weekly_cases_by_state %>%
+    arrange(State, week) %>%
+    group_by(State) %>%
+    mutate(weekly_new_cases = state_weekly_cum_cases - lag(state_weekly_cum_cases)) %>%
+    # removing the first week for each state bc it lacks a previous week
+    filter(!is.na(weekly_new_cases))
+  
+  # handling negative increases
+  weekly_new_cases_per_state$weekly_new_cases[weekly_new_cases_per_state$weekly_new_cases < 0] <- 0
+  
+  # calculate the total population for each state
+  state_population <- covid_rate %>%
+    distinct(State, FIPS, .keep_all = TRUE) %>%
+    group_by(State) %>%
+    summarize(Total_Population = sum(TotalPopEst2019))
+  state_population
+  
+  # calculate the total cases per state for each week
+  state_cases <- covid_rate %>%
+    group_by(State, week) %>%
+    summarise(total_cum_cases = sum(cum_cases, na.rm = FALSE)) %>%
+    ungroup()
 
-    # Plot spaghetti plots
-    ggplot(weekly_cases, aes(x = week, y = weekly_case_per100k, group = State, color = State)) +
-      geom_line() +
-      labs(title = "Weekly COVID-19 Cases per 100k Population",
-           x = "Week",
-           y = "Weekly Cases per 100k") +
-      theme_minimal()
-    ```
+  # merge the dataframes and calculate the new cases per 100k for each state
+  state_cases <- merge(state_cases, state_population, by = "State", all.x = TRUE)
+  weekly_cases <- merge(weekly_new_cases_per_state, state_cases, by = c("State", "week"), all.x = TRUE)
+  weekly_cases$per100k <- (weekly_cases$weekly_new_cases / weekly_cases$Total_Population) * 100000
+
+  # plot the spaghettis
+  ggplot(weekly_cases, aes(x = week, y = per100k, group = State, color = State)) +
+    geom_line() +
+    labs(title = "Weekly COVID-19 Cases per 100k Population",
+      x = "Week",
+      y = "Weekly Cases per 100k") +
+    theme_minimal()
+
+```
 
 iii) Summarize the COVID case trend among states based on the plot in ii). What could be the possible reasons to explain the variabilities?
+
+Based on the plot in part ii, we can see a COVID case trend of three waves, with the last wave having the highest peak. This is shown in the spaghetti plot for all of the states in terms of weekly new cases per 100k, which thus adjusts for the state populations and standardizes the metric across all states. These waves are on weeks 13, 28, and 46. The variabilities might be caused by spreads of the virus in specific locations, which might cause that state to be impacted more by the wave. Also varied regulations, such as masks and vaccine requirements, might cause certain states to have more cases per 100k than others.
 
 ## COVID death trend
 
