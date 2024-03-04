@@ -36,7 +36,7 @@ if(!require("pacman")) install.packages("pacman")
 
 pacman::p_load(tidyverse, dplyr, ggplot2, ggthemes, data.table, lubridate,glmnet,
                GGally, RColorBrewer, ggsci, plotROC, usmap,
-               plotly, ggpubr, vistime)
+               plotly, ggpubr, vistime, car)
 ```
 
 # Background
@@ -255,6 +255,8 @@ Based on the plot in part ii, we can see a COVID case trend of three waves, with
 
 i)  For each month in 2020, plot the monthly deaths per 100k heatmap by state on US map. Use the same color range across months. (Hints: Set `limits` argument in `scale_fill_gradient()` or use `facet_wrap()`; use `lubridate::month()` and `lubridate::year()` to extract month and year from date; use `tidyr::complete(state, month, fill = list(new_case_per100k = NA))` to complete the missing months with no cases.)
 
+After cleaning the data for NA's and extracting the monthly data for each state, we plotted the spaghetti plots for the states, as well as a heatmap for 2020. We see that the peaks in the spaghetti plot correspond to the months in the heatmap that have darker shades of red, specifically around month 4 (in the northeast), slightly in month 8, and increasing in months 10-12. The darker red shades correspond to more monthly deaths per 100k.
+
 ```{r}
   # calculate the weeks for each date
   covid_rate <- covid_rate %>%
@@ -383,33 +385,172 @@ county_data[, c(1, 2, 3, 214)]
 ```
 
 
-ii) Select possible variables in `county_data` as covariates. We provide `county_data_sub`, a subset variables from `county_data`, for you to get started. Please add any potential variables as you wish.
+ii) Select possible variables in `county_data` as covariates. We provide `county_data_sub`, a subset of variables from `county_data`, for you to get started. Please add any potential variables as you wish.
 
 ```{r}
-names(county_data)
+# names(county_data)
+# fit.lm <- lm(log_total_death_per100k~., county_data) # dump all variables in the model
+# summary(fit.lm) 
+#Anova(fit.lm)
 ```
-
-
-    a)  Report missing values in your final subset of variables.
-
-    b)  In the following anaylsis, you may ignore the missing values.
 
 ```{r}
 county_data_sub <- county_data %>%
-  select(County, State, FIPS, Deep_Pov_All, PovertyAllAgesPct, PerCapitaInc, UnempRate2019, PctEmpFIRE, PctEmpConstruction, PctEmpTrans, PctEmpMining, PctEmpTrade, PctEmpInformation, PctEmpAgriculture, PctEmpManufacturing, PctEmpServices, PopDensity2010, OwnHomePct, Age65AndOlderPct2010, TotalPop25Plus, Under18Pct2010, Ed2HSDiplomaOnlyPct, Ed3SomeCollegePct, Ed4AssocDegreePct, Ed5CollegePlusPct, ForeignBornPct, Net_International_Migration_Rate_2010_2019, NetMigrationRate1019, NaturalChangeRate1019, TotalPopEst2019, WhiteNonHispanicPct2010, NativeAmericanNonHispanicPct2010, BlackNonHispanicPct2010, AsianNonHispanicPct2010, HispanicPct2010, Type_2015_Update, RuralUrbanContinuumCode2013, UrbanInfluenceCode2013, Perpov_1980_0711, HiCreativeClass2000, HiAmenity, Retirement_Destination_2015_Update)
+  select(State.x, FIPS, Deep_Pov_All, PovertyAllAgesPct, PerCapitaInc, UnempRate2019, PctEmpFIRE, PctEmpConstruction, PctEmpTrans, PctEmpMining, PctEmpTrade, PctEmpInformation, PctEmpAgriculture, PctEmpManufacturing, PctEmpServices, PopDensity2010, OwnHomePct, Age65AndOlderPct2010, TotalPop25Plus, Under18Pct2010, Ed2HSDiplomaOnlyPct, Ed3SomeCollegePct, Ed4AssocDegreePct, Ed5CollegePlusPct, ForeignBornPct, Net_International_Migration_Rate_2010_2019, NetMigrationRate1019, NaturalChangeRate1019, TotalPopEst2019.x, WhiteNonHispanicPct2010, NativeAmericanNonHispanicPct2010, BlackNonHispanicPct2010, AsianNonHispanicPct2010, HispanicPct2010, Type_2015_Update, RuralUrbanContinuumCode2013, UrbanInfluenceCode2013, Perpov_1980_0711, HiCreativeClass2000, HiAmenity, Retirement_Destination_2015_Update, NonEnglishHHPct, FemaleHHNum, AvgHHSize, log_total_death_per100k)
 ```
 
-iii) Use LASSO to choose a parsimonious model with all available sensible county-level information. **Force in State** in the process. Why we need to force in State? You may use `lambda.1se` to choose a smaller model.
+```{r}
+# Get column names of county_data
+all_columns <- names(county_data)
+
+# Get column names of county_data_sub
+included_columns <- names(county_data_sub)
+
+# Find the columns not included in county_data_sub
+not_included_columns <- setdiff(all_columns, included_columns)
+
+# Display the columns not included
+not_included_columns
+```
+We added the variables NonEnglishHHPct, FemaleHHNum, and AvgHHSize to the existing model variables. For example, we thought higher average household sizes might lead to more viral spread and therefore more deaths. So now, county_data_sub has 45 variables. We also included the response variable, log_total_death_per100k, for when we eventually will run a regression on the data.
+
+    a)  Report missing values in your final subset of variables.
+    
+  We found 174 rows with NA values.
+    
+```{r}
+rows_with_na <- county_data_sub[apply(is.na(county_data_sub), 1, any), ]
+dim(rows_with_na) # 174 rows have NA values
+```
+
+    b)  In the following anaylsis, you may ignore the missing values.
+    
+  After omitting the NA rows, we have 3,105 rows left in county_data_sub.
+    
+```{r}
+# see number of rows before removing NAs
+# had 3279 rows before
+dim(county_data_sub)
+
+# Remove rows with any NA values
+# removed 174 NA rows
+county_data_sub <- na.omit(county_data_sub)
+
+# Check the dimensions after removing NA rows
+# have 3105 rows after
+dim(county_data_sub)
+```
+
+
+
+iii) Use LASSO to choose a parsimonious model with all available sensible county-level information. **Force in State** in the process. Why do we need to force in State? You may use `lambda.1se` to choose a smaller model.
+
+We need to force in state so that all levels of this factor variable must be included, so no penalties on those betas. This way, none of the states get omitted from the LASSO model. We use penalty factor in the code for this. After we run the model using lambda.1se (for a smaller model), we see all of the states included in selected_vars.
+
+```{r}
+# make 'State.x' a factor
+county_data_sub <- county_data_sub %>%
+  mutate(State.x = as.factor(State.x))
+
+# Check the structure of county_data_sub after mutation
+str(county_data_sub)
+
+unique_states <- levels(county_data_sub$State.x)
+unique_states
+```
+
+
+```{r}
+
+Y <- as.matrix(county_data_sub[, 45]) # extract Y
+X.fl <- model.matrix(log_total_death_per100k~., data=county_data_sub)[, -1]
+set.seed(10) # for randomness
+
+penalty_factors <- ifelse(startsWith(colnames(X.fl), "State.x"), 0, 1)
+
+# Fit the LASSO model with forced variable selection using cross-validation
+fit.fl.force.cv <- cv.glmnet(X.fl, Y, alpha = 1, nfolds = 10, intercept = TRUE,
+                              penalty.factor = penalty_factors)
+
+# fit.fl.force.cv <- cv.glmnet(X.fl, Y, alpha=1, nfolds=10, intercept = T,
+#                       penalty.factor = c(0, rep(1, ncol(X.fl)-1)))  # force the first x in the model
+coef.force.min <- coef(fit.fl.force.cv, s="lambda.1se")
+var.force.min <- coef.force.min[which(coef.force.min !=0),]  
+selected_vars <- rownames(as.matrix(var.force.min))[-1]
+selected_vars
+
+```
+
 
 iv) Use a quick backward elimination to fine tune the LASSO model from iii). Again **force in State** in the process.
 
+We ran a backward elimination by removing the highest p-value variables in each iteration one by one until no p-value was greater than 0.05. We set this final model, fit6 to be our final.fit mode. We didn't remove any state from anything. In final.fit, all p-values are less than 0.05.
+
+```{r}
+# backward elimination step
+
+# filter out variables starting with "State.x", since the categories are not columns in the dataframe
+selected_vars_cleaned <- selected_vars[!startsWith(selected_vars, "State.x")]
+
+# Add "State.x" to the filtered variables
+selected_vars_cleaned <- c("State.x", selected_vars_cleaned)
+
+lm.input <- as.formula(paste("log_total_death_per100k", "~", paste(selected_vars_cleaned, collapse = " + "))) 
+fit.min.lm <- lm(lm.input, data=county_data_sub)
+Anova(fit.min.lm) #kick PovertyAllAgesPct out
+fit2 <- update(fit.min.lm, .~. -PovertyAllAgesPct, county_data_sub)
+Anova(fit2) # kick NonEnglishHHPctout
+fit3 <- update(fit2, .~. -NonEnglishHHPct)
+Anova(fit3) #kick PctEmpManufacturing out
+fit4 <- update(fit3, .~. -PctEmpManufacturing)
+Anova(fit4) #kick PctEmpTrade out
+fit5 <- update(fit4, .~. -PctEmpTrade)
+Anova(fit5) #kick PerCapitaInc out
+fit6 <- update(fit5, .~. -PerCapitaInc)
+Anova(fit6) # we will stop here, since all p values are less than 0.05
+```
+
+Finally fit our final model
+```{r}
+final.fit <- fit6
+summary(final.fit)
+```
+
+
 v)  If necessary, reduce the model from iv) to a final model with all variables being significant at 0.05 level. Are the linear model assumptions all reasonably met?
+
+We have ensured that all variables have less than 0.05 as their p-value when doing the backward elimination step, and we forced in State (so even though some states have large p-values, we force them in, but all other non-state variables have low p-values). To test if the linear model assumptions are reasonably met, we run residuals vs fitted, as well as the Q-Q residuals test. We can see in residuals vs fitted that the values are spread out randomly, with some positives and some negatives, along with random variance. In the Q-Q residuals test, we see a generally positive linear relationship among the points. Thus, our model fits the linear model assumptions reasonable with linearity and homoscedasticity. We see a couple of abnormalities, however: in the residuals vs fitted plot, we see a negatively sloped line of a few points, but overall the points are random and evenly spread. In the Q-Q plot, there is a wave in the generally positively sloped line, but overall the Q-Q plot fits the linear model assumption expectations. We believe these abnormalities might be due to forcing State in.
+
+```{r}
+par(mfrow=c(1,2), mar=c(5,2,4,2), mgp=c(3,0.5,0)) # plot(final.fit) produces several plots
+plot(final.fit, 1, pch=16) # residual plot
+abline(h=0, col="blue", lwd=2)
+plot(final.fit, 2) # qqplot
+summary(final.fit)
+```
 
 vi) It has been shown that COVID affects elderly the most. It is also claimed that the COVID death rate among African Americans and Latinos is higher. Does your analysis support these arguments?
 
+Looking at the summary of our final.fit LASSO model, we can see that the variable Age65AndOlderPct2010 has an estimate (beta value) 3.27e-02, with a p-value of 1.2e-05 *** (very small). This suggests that there is a positive correlation between percentage of elderly people and the number of (log) deaths per 100k, since we have a positive beta value. Additionally, since we have a very small p-value, this implies that Age65AndOlderPct2010 is a significant variable in our model. Likewise, our model includes the variable HispanicPct2010 with a positive beta estimate of 8.72e-03, and a p-value that is very small: 2.9e-05 ***. Again, this suggests that there is a positive correlation between percentage of Hispanic people and the number of (log) deaths per 100k, since we have a positive beta value. Additionally, since we have a very small p-value, this implies that HispanicPct2010 is a significant variable in our model. These two variables in our LASSO model support these arguments. 
+
+In terms of African Americans, that variable was not included in our LASSO model when we used lambda.1se. However, we have also run a separate linear model of log_total_death_per100k versus BlackNonHispanicPct2010. Our one-variable linear model with BlackNonHispanicPct2010 gave a positive beta estimate of 0.01305, with a p-value <2e-16 ***. This suggests that there is a positive correlation between percentage of African American people and the number of (log) deaths per 100k, since we have a positive beta value, though it has a pretty small magnitude. Thus, our analysis more strongly supports the claims about COVID affecting the elderly and Hispanic populations, rather than the African American population. 
+
+```{r}
+lm_afr_american <- lm(log_total_death_per100k ~ BlackNonHispanicPct2010, data=county_data_sub)
+summary(lm_afr_american)
+```
+
 vii) Based on your final model, summarize your findings. In particular, summarize the state effect controlling for others. Provide intervention recommendations to policy makers to reduce COVID death rate.
 
+Based on the final model, we can see that the state effect, controlling for other variables, significantly influences the log death rate per 100k. Several states show significant associations with the death rate, like California and Washington, among other states. For instance, California has a negative coefficient, indicating that, on average, the death rate tends to be lower in California compared to the reference state. However, some states like South Dakota and Montana have notably large positive coefficients, suggesting relatively higher death rates, with very low p-values.
+
+In addition to the state effect, several other non-state variables show significant impact on  the log death rate per 100k in the final model. Variables such as PctEmpConstruction, PctEmpMining, and PctEmpAgriculture exhibit negative coefficients, indicating that higher employment rates in these sectors are associated with lower COVID-19 death rates. This suggests that individuals in these sectors might have lower exposure to the virus or better access to healthcare resources. Moreover, factors such as population density, age demographics (Age65AndOlderPct2010, Under18Pct2010), educational variables (Ed3SomeCollegePct, Ed5CollegePlusPct), migration rates (NetMigrationRate1019), and ethnic composition (WhiteNonHispanicPct2010, HispanicPct2010) also play significant roles in shaping the death rate. For instance, higher proportions of older adults and individuals with lower educational attainment are associated with higher death rates, highlighting the importance of targeted interventions to protect vulnerable populations. Overall, these findings show the complex interaction of various sociodemographic factors influencing the death rate and emphasize the need for various policy approaches to lower the death rate.
+
+Policy interventions to reduce the COVID death rate should be tailored to address state-specific needs, with increased help for states like Montana and South Dakota, which have higher relative death rates. Strategies should focus on enhancing healthcare infrastructure, promoting vaccination campaigns, implementing and enforcing public health measures (like mask mandates and social distancing), improving access to healthcare services (especially in rural areas/states), and providing adequate support to vulnerable populations, such as more accessible healthcare for the elderly and Hispanic populations. Additionally, targeted efforts should be made to address socioeconomic disparities, since variables like population density, education levels, and employment also play significant roles in the COVID death rate. Collaboration between federal, state, and local governments, as well as community stakeholders, would help to successfully implement these interventions.
+
 viii) What else can we do to improve our model? What other important information we may have missed?
+
+One variable that we definitely missed was the African American population percentage. The model could also be improved with more COVID-specific data, since as vaccination records based on the first dose, second dose, and booster, types of vaccines administered, data regarding masking and social distancing, and more. These variables could have been included to the model produced by the LASSO analysis. Our final model also could have had an income variable, or median household income, to analyze the economic impacts on the death rate. These other variables could be more informative for our LASSO model.
 
 ix) (Optional) Would your findings be very different if you had refined the data in some way or imputed the missing values in part ii). Check PCA lecture, section 10 for imputations via `softImpute`.
 
