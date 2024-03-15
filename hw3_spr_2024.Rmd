@@ -144,7 +144,7 @@ To keep our answers consistent, use a subset of the data, and exclude anyone wit
 ```{r data preparation, include=F}
 # Notice that we hide the code and the results here
 # Using `include=F` in the chunk declaration. 
-hd_data <- read.csv("Framingham.dat")
+hd_data <- read.csv("./data/Framingham.dat")
 str(hd_data) 
 
 ### Renames, setting the variables with correct natures...
@@ -188,11 +188,67 @@ Conceptual questions to understand the building blocks of logistic regression. A
 
 i. Take a random subsample of size 5 from `hd_data_f` which only includes `HD` and `SBP`. Also set  `set.seed(471)`. List the five observations neatly below. No code should be shown here.
 
+```{r, echo=F}
+row.names(hd_data.f) <- 1:1393
+set.seed(471)
+indx <- sample(1393, 5)
+hd_data.f[indx, c(1, 4)]
+```
+
+
 ii. Write down the likelihood function using the five observations above.
+
+$$P(HD=1\vert SBP) = \frac{e^{\beta_0 + \beta_1 SBP}}{1+e^{\beta_0+\beta_1 SBP}}$$
+The likelihood function = Prob(All events in data occurred)=P((y1 = 1, x1 = 140) ^ (y2 = 0, x2 = 110) ^ (y3 = 1, x3 = 150) ^ (y4 = 1, x4 = 260) ^ (y5 = 0, x5 = 122))
+Since these are independent observations, we can multiply them:
+=P(y1 = 1, x1 = 140) * P(y2 = 0, x2 = 110) * P(y3 = 1, x3 = 150) * P(y4 = 1, x4 = 260) * P(y5 = 0, x5 = 122)
+$$lik(\beta_0, \beta_1 \vert data) = \frac{e^{\beta_0+\beta_1 140}}{1+e^{\beta_0+\beta_1 140}} \times \frac{1}{1+e^{\beta_0+\beta_1 110}} \times \frac{e^{\beta_0+\beta_1 150}}{1+e^{\beta_0+\beta_1 150}} \times \frac{e^{\beta_0+\beta_1 260}}{1+e^{\beta_0+\beta_1 260}} \times \frac{1}{1+e^{\beta_0+\beta_1 122}} $$
 
 iii. Find the MLE based on this subset using glm(). Report the estimated logit function of `SBP` and the probability of `HD`=1. Briefly explain how the MLE are obtained based on ii. above.
 
-iv. Evaluate the probability of Liz having heart disease. 
+The MLE is obtained by finding a B1 and B0 that maximize the likelihood function above:
+
+$$(\hat \beta_1, \hat \beta_0) = \arg\max_{\beta_0, \beta_1} \mathcal{L}(\beta_0, \beta_1 \vert Data)$$
+
+```{r, echo=F}
+fit1 <- glm(HD~SBP, hd_data.f, family=binomial(logit)) 
+summary(fit1)
+```
+
+Look at the fit1 applied to the five random samples from above:
+```{r, echo=F}
+fit1$fitted.values[indx]
+```
+
+
+- logit = -3.66 + 0.0159 SBP
+
+- $$\begin{split}
+\hat P(HD = 1 \vert SBP) &= \frac{e^{-3.66+0.0159 \times  SBP}}{1+e^{-3.66+0.0159 \times SBP}} \\
+\hat P(HD = 0 \vert SBP) &= \frac{1}{1+e^{-3.66+0.0159 \times SBP}}
+\end{split}$$
+
+iv. Evaluate the probability of Liz having heart disease.
+
+Liz is a patient with the following readings: `AGE=50, GENDER=FEMALE, SBP=110, DBP=80, CHOL=180, FRW=105, CIG=0`.
+Since our logit function is only based on SBP, we can calculate her probability of having HD as follows:
+
+```{r}
+liz <- c(HD = -1, AGE=50, SEX="FEMALE", SBP=110, DBP=80, CHOL=180, FRW=105, CIG=0)
+liz <- data.frame(t(liz))
+liz[, -which(names(liz) == "SEX")] <- lapply(liz[, -which(names(liz) == "SEX")], as.integer)
+liz
+```
+
+Based on fit1 we plug in `SBP` value into the prob equation.
+$$\hat P(HD = 1 \vert SBP=110) = \frac{e^{-3.66+0.0159 \times  SBP}}{1+e^{-3.66+0.0159 \times SBP}} =  \frac{e^{-3.66+0.0159 \times  110}}{1+e^{-3.66+0.0159 \times 110}} \approx 0.128$$
+
+We can also use the `predict()` function. We see that we also get 0.128.
+```{r results=TRUE}
+fit1.predict <- predict(fit1, liz, type="response") 
+fit1.predict
+```
+
 
 #### Identify important risk factors for `Heart.Disease.`
 
@@ -204,24 +260,60 @@ fit1.1 <- glm(HD~SBP + AGE, hd_data.f, family=binomial)
 summary(fit1.1)
 # you will need to finish by adding each other variable 
 # fit1.2...
+fit1.2 <- glm(HD~SBP + AGE + DBP, hd_data.f, family=binomial)
+summary(fit1.2)
+fit1.3 <- glm(HD~SBP + AGE + DBP + CHOL, hd_data.f, family=binomial)
+summary(fit1.3)
+fit1.4 <- glm(HD~SBP + AGE + DBP + CHOL + FRW, hd_data.f, family=binomial)
+summary(fit1.4)
+fit1.5 <- glm(HD~SBP + AGE + DBP + CHOL + FRW + CIG, hd_data.f, family=binomial)
+summary(fit1.5)
+fit1.6 <- glm(HD~SBP + AGE + DBP + CHOL + FRW + CIG + SEX, hd_data.f, family=binomial)
+summary(fit1.6)
 ```
 
 i. Which single variable would be the most important to add?  Add it to your model, and call the new fit `fit2`.  
 
 We will pick up the variable either with highest $|z|$ value, or smallest $p$ value. Report the summary of your `fit2` Note: One way to keep your output neat, we will suggest you using `xtable`. And here is the summary report looks like.
+
+We added sex because according to our final model from above (fit1.6), sex has the lowest p-value. 
 ```{r the most important addition, results='asis', comment="   "}
 ## How to control the summary(fit2) output to cut some junk?
 ## We could use packages: xtable or broom. 
 ## Assume the fit2 is obtained by SBP + AGE
 library(xtable)
 options(xtable.comment = FALSE)
-fit2 <- glm(HD~SBP + AGE, hd_data.f, family=binomial)
-xtable(fit2)
+fit2 <- glm(HD~SBP + AGE + SEX, hd_data.f, family=binomial)
+data.frame(xtable(fit2))
 ```
 
 ii. Is the residual deviance of `fit2` always smaller than that of `fit1`? Why or why not?
+
+The residual deviance for fit1 was 1417.5; the residual deviance for fit2 was 1357.9. The residual deviance will always decrease as the number of variables included increases, but it is not always the best idea to include all of the variables since the data will be "overfitted" by the model.
+
+```{r, echo=F}
+summary(fit1)
+summary(fit2)
+```
+
   
 iii. Perform both the Wald test and the Likelihood ratio tests (Chi-Squared) to see if the added variable is significant at the .01 level.  What are the p-values from each test? Are they the same? 
+
+We do a Wald test. We can see that Sex is significant at alpha=0.01 since it has a p-value of 1.6e-10.
+```{r, echo=F}
+summary(fit2)
+```
+
+
+From anova, we can see that fit1 and fit2 are significantly different.
+```{r, echo=F}
+anova(fit1, fit2, test="Chisq")
+```
+Anova on fit2 tells us that the p-value for sex is significant at alpha=0.01 (6.0e-11), which is smaller than the p-value found from the Wald test (1.6e-10).
+```{r, echo=F}
+Anova(fit2)
+```
+
 
 ####  Model building
 
@@ -229,17 +321,109 @@ Start with all variables. Our goal is to fit a well-fitting model, that is still
 
 i. Use backward selection method. Only keep variables whose coefficients are significantly different from 0 at .05 level. Kick out the variable with the largest p-value first, and then re-fit the model to see if there are other variables you want to kick out.
 
+```{r, echo=F}
+fit_a <- glm(HD~SBP + AGE + DBP + CHOL + FRW + CIG + SEX, hd_data.f, family=binomial)
+#summary(fit_a)
+# remove DBP (largest p-value)
+fit_b <- glm(HD~SBP + AGE + CHOL + FRW + CIG + SEX, hd_data.f, family=binomial)
+#summary(fit_b)
+# remove FRW (largest p-value)
+fit_c <- glm(HD~SBP + AGE + CHOL + CIG + SEX, hd_data.f, family=binomial)
+#summary(fit_c)
+# remove CIG (largest p-value)
+fit_final <- glm(HD~SBP + AGE + CHOL + SEX, hd_data.f, family=binomial)
+summary(fit_final)
+```
+
 ii. Use AIC as the criterion for model selection. Find a model with small AIC through exhaustive search. Does exhaustive search  guarantee that the p-values for all the remaining variables are less than .05? Is our final model here the same as the model from backwards elimination? 
 
-iii. Use the model chosen from part ii. as the final model. Write a brief summary to describe important factors relating to Heart Diseases (i.e. the relationships between those variables in the model and heart disease). Give a definition of “important factors”. 
+We use bestglm() to find the model with the smallest AIC:
+```{r results=TRUE}
+# Get the design matrix without 1's and HD
+Xy_design <- model.matrix(HD ~.+0, hd_data.f) 
+# Attach y as the last column.
+Xy <- data.frame(Xy_design, hd_data.f$HD)   
+
+fit.all <- bestglm(Xy, family = binomial, method = "exhaustive", IC="AIC", nvmax = 10) # method = "exhaustive", "forward" or "backward"
+names(fit.all) # fit.all$Subsets to list best submodels
+```
+
+List the top 5 models. In the way any one of the following model could be used. 
+```{r results=TRUE}
+fit.all$BestModels  
+```
+
+We run a summary and Anova based on the first row from BestModels, which has the lowest AIC value.
+We can see that our exhaustive search does NOT guarantee that the p-values for all the remaining variables are less than .05. For instance, FRW has p-value of 0.1315 from the Wald's test and 0.1336 from the Chi-squared test.
+
+Our final model from the exhaustive search is not the same as that from our backwards elimination from above since here we included two extra variables: FRW and CIG.
+
+```{r results=TRUE}
+fit_aic_final <- glm(HD~AGE+SEX+SBP+CHOL+FRW+CIG, family=binomial, data=hd_data.f)
+summary(fit_aic_final)
+Anova(fit_aic_final)
+```
+
+iii. Use the model chosen from part ii. as the final model. Write a brief summary to describe important factors relating to Heart Diseases (i.e. the relationships between those variables in the model and heart disease). Give a definition of “important factors”.
+
+
+In the context of the final model from the exhaustive search, "important factors" refer to the variables (AGE, SEX, SBP, CHOL, FRW, CIG) and their coefficients that are statistically significant in predicting the likelihood of heart disease. These variables are all positively correlated with heart disease since they have positive B-values. Overall, all are statistically significant at alpha = 0.05, except FRW. We see a low AIC of 1357, which suggests our model is parsimonious.
+
+AGE (0.06153): For each additional year of age, the log odds of having heart disease increase by 0.06153, assuming all other variables are held constant.
+
+SEX (0.91127 for male): Being male (SEXMALE) increases the log odds of having heart disease by 0.91127 compared to being female, assuming all other variables are held constant.
+
+SBP (0.01597): For each additional unit increase in systolic blood pressure (SBP), the log odds of having heart disease increase by 0.01597, assuming all other variables are held constant.
+
+CHOL (0.00449): For each additional unit increase in cholesterol (CHOL) level, the log odds of having heart disease increase by 0.00449, assuming all other variables are held constant.
+
+FRW (0.00604): The log odds of having heart disease increase by 0.00604 for each unit increase in FRW, assuming all other variables are held constant. However, FRW is not statistically significant at an alpha = 0.05 (FRW p-value = 0.1315).
+
+CIG (0.01228): For each additional unit increase in cigarette consumption (CIG), the log odds of having heart disease increase by 0.01228, assuming all other variables are held constant. CIG is marginally significant but still under the alpha = 0.05 level (p-value = 0.0437).
+
+From this summary, we can conclude that age, sex (male), systolic blood pressure (SBP), and cholesterol (CHOL) are important factors significantly associated with the likelihood of heart disease, based on our final model.
 
 iv. What is the probability that Liz will have heart disease, according to our final model?
+
+We can also use the `predict()` function. We see that her probability of having HD is 0.0459. This is lower from our previous prediction of 0.128.
+```{r results=TRUE}
+fit_aic_final.predict <- predict(fit_aic_final, liz, type="response") 
+fit_aic_final.predict
+```
 
 ###  Classification analysis
 
 #### ROC/FDR
 
 i. Display the ROC curve using `fit1`. Explain what ROC reports and how to use the graph. Specify the classifier such that the False Positive rate is less than .1 and the True Positive rate is as high as possible.
+
+Sensitivity = TP rate
+Specificity = 1 - FP
+
+We want FPR to be < 0.1, so we want want specificity to be > 0.9. 
+
+```{r, echo=F}
+fit1.roc<- roc(hd_data.f$HD, fit1$fitted, plot=T, col="blue")
+names(fit1.roc) # thresholds, sensitivities, specificities, auc
+plot(fit1.roc)
+fit1.roc$auc
+```
+
+
+We can find the thresholds from `fit1.roc`. 
+```{r}
+fpr_threshold <- 0.1
+index <- which(fit1.roc$specificities > (1 - fpr_threshold))
+optimal_index <- index[which.max(fit1.roc$sensitivities[index])]
+optimal_threshold <- fit1.roc$thresholds[optimal_index]
+optimal_threshold
+```
+
+We find the corresponding specificity (0.902) and sensitivity (0.215) at the optimal_threshold (0.298).
+```{r}
+fit1.roc$specificities[optimal_index]
+fit1.roc$sensitivities[optimal_index]
+```
 
 ii. Overlay two ROC curves: one from `fit1`, the other from `fit2`. Does one curve always contain the other curve? Is the AUC of one curve always larger than the AUC of the other one? Why or why not?
 
