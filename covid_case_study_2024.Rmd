@@ -92,7 +92,7 @@ The cleaning procedure is attached in `Appendix 2: Data cleaning` You may go thr
 
 First read in the data.
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 # county-level socialeconomic information
 county_data <- fread("data/covid_county.csv") 
 # county-level COVID case and death
@@ -109,7 +109,7 @@ We first look at county_data.
 
 There are 207 different variables that we are looking at for each of the 3278 different counties. Each column measures some sort of socioeconomic quality of that county. county_data combines 4 different data sets: Income, Jobs, People, and County Classifications.
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 dim(county_data)
 ```
 
@@ -117,24 +117,24 @@ We now look at covid_rate.
 
 There are 1,008,984 rows for counties at different days (i.e. each county has many rows, one for each day). Each row has 7 different variables. The columns are listed below. It provides cumulative counts of cases (infections) and fatalities (deaths).
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 rows_with_na <- covid_rate[apply(is.na(covid_rate), 1, any), ]
-dim(rows_with_na) # no rows have NA values
-str(covid_rate)
+# dim(rows_with_na) # no rows have NA values
+# str(covid_rate)
 dim(covid_rate)
 ```
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 colnames(covid_rate)
 ```
 
 We can see that county and state are characters, but we should change them to factors
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 covid_rate <- covid_rate %>%
     mutate(County = as.factor(County),
          State = as.factor(State))
-str(covid_rate)
+# str(covid_rate)
 ```
 
 ## COVID case trend
@@ -145,7 +145,7 @@ i)  Plot **new** COVID cases in NY, WA and FL by state and by day. Any irregular
 
     We see a wave in NY in April 2020 not seen in the other states to the same degree. The issue with single day data is that it is not normalized to each state's beginning population, so a change in one state is not necessarily as drastic as a change in another. We should instead use proportions. Also, for instance, in Washington in January 2021 there is a large amount of variability because it varies day-to-day so much, so it is hard to interpret. Weekly data would probably be easier to interpret because it would be less varied.
 
-    ```{r}
+    ```{r, echo=F, warning=F, message=F}
     #calculate NEW cases per day
     daily_cases <- covid_rate %>%
       group_by(FIPS) %>%
@@ -156,21 +156,17 @@ i)  Plot **new** COVID cases in NY, WA and FL by state and by day. Any irregular
       group_by(date, State) %>%
       summarise(total_new_cases = sum(new_cases))
 
-    # Pivot the data to have columns for each state
     daily_state_cases_wide <- daily_state_cases %>%
       pivot_wider(names_from = State, values_from = total_new_cases)
 
-    # Filter data for NY, WA, and FL
     selected_states <- c("New York", "Washington", "Florida")
 
-    # Create a list to store the plots
     plots <- list()
 
-    # Iterate over selected states and create plots
     for (state in selected_states) {
       plot_data <- daily_state_cases_wide %>%
         select(date, state) %>%
-        na.omit()  # Remove NA values
+        na.omit() 
 
       plot <- ggplot(plot_data, aes(x = date, y = !!rlang::sym(state))) +
         geom_point() +
@@ -182,13 +178,12 @@ i)  Plot **new** COVID cases in NY, WA and FL by state and by day. Any irregular
       plots[[state]] <- plot
     }
 
-    # Display the plots
     gridExtra::grid.arrange(grobs = plots, ncol = 1)
     ```
 
 ii) Create **weekly new** cases per 100k `weekly_case_per100k`. Plot the spaghetti plots of `weekly_case_per100k` by state. Use `TotalPopEst2019` as population.
 
-```{r}
+```{r, echo=F, warning=F, message=F}
   
   # calculate the weeks for each date
   covid_rate <- covid_rate %>%
@@ -224,7 +219,7 @@ ii) Create **weekly new** cases per 100k `weekly_case_per100k`. Plot the spaghet
     distinct(State, FIPS, .keep_all = TRUE) %>%
     group_by(State) %>%
     summarize(Total_Population = sum(TotalPopEst2019))
-  state_population
+  # state_population
   
   # calculate the total cases per state for each week
   state_cases <- covid_rate %>%
@@ -257,7 +252,7 @@ i)  For each month in 2020, plot the monthly deaths per 100k heatmap by state on
 
 After cleaning the data for NA's and extracting the monthly data for each state, we plotted the spaghetti plots for the states, as well as a heatmap for 2020. We see that the peaks in the spaghetti plot correspond to the months in the heatmap that have darker shades of red, specifically around month 4 (in the northeast), slightly in month 8, and increasing in months 10-12. The darker red shades correspond to more monthly deaths per 100k.
 
-```{r}
+```{r, echo=F, warning=F, message=F}
   # calculate the weeks for each date
   covid_rate <- covid_rate %>%
     group_by(State) %>%
@@ -292,7 +287,7 @@ After cleaning the data for NA's and extracting the monthly data for each state,
     distinct(State, FIPS, .keep_all = TRUE) %>%
     group_by(State) %>%
     summarize(Total_Population = sum(TotalPopEst2019))
-  state_population
+  # state_population
   
   # calculate the total deaths per state for each month
   state_deaths <- covid_rate %>%
@@ -315,7 +310,7 @@ After cleaning the data for NA's and extracting the monthly data for each state,
 
 ```
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 # ensure the dataset has an entry for each state for each month, even if 0 deaths
 monthly_deaths_complete <- monthly_deaths %>%
   complete(State, month, fill = list(monthly_new_deaths = NA))
@@ -331,7 +326,7 @@ plot_usmap(data = monthly_deaths_complete, values = "per100k", lines = "black") 
 
 ii) (Optional) Use `plotly` to animate the monthly maps in i). Does it reveal any systematic way to capture the dynamic changes among states? (Hints: Follow *Appendix 3: Plotly heatmap::* in Module 6 regularization lecture to plot the heatmap using `plotly`. Use `frame` argument in `add_trace()` for animation. `plotly` only recognizes abbreviation of state names. Use `unique(us_map(regions = "states") %>% select(abbr, full))` to get the abbreviation and merge with the data to get state abbreviation.)
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 # # get state abbreviations
 # state_abbreviations <- unique(us_map(regions = "states") %>% select(abbr, full))
 # 
@@ -356,7 +351,7 @@ We now try to build a good parsimonious model to find possible factors related t
 
 i)  Create the response variable `total_death_per100k` as the total of number of COVID deaths per 100k by *Feb 1, 2021*. We suggest to take log transformation as `log_total_death_per100k = log(total_death_per100k + 1)`. Merge `total_death_per100k` to `county_data` for the following analysis.
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 
 # filter covid_rate data up to Feb 1, 2021
 covid_data_filtered <- covid_rate %>%
@@ -379,24 +374,24 @@ total_deaths_by_county <- total_deaths_by_county %>%
 county_data <- county_data %>%
   left_join(total_deaths_by_county, by = "FIPS")
 
-county_data[, c(1, 2, 3, 214)]
+# county_data[, c(1, 2, 3, 214)]
 ```
 
 ii) Select possible variables in `county_data` as covariates. We provide `county_data_sub`, a subset of variables from `county_data`, for you to get started. Please add any potential variables as you wish.
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 # names(county_data)
 # fit.lm <- lm(log_total_death_per100k~., county_data) # dump all variables in the model
 # summary(fit.lm) 
 #Anova(fit.lm)
 ```
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 county_data_sub <- county_data %>%
   select(State.x, FIPS, Deep_Pov_All, PovertyAllAgesPct, PerCapitaInc, UnempRate2019, PctEmpFIRE, PctEmpConstruction, PctEmpTrans, PctEmpMining, PctEmpTrade, PctEmpInformation, PctEmpAgriculture, PctEmpManufacturing, PctEmpServices, PopDensity2010, OwnHomePct, Age65AndOlderPct2010, TotalPop25Plus, Under18Pct2010, Ed2HSDiplomaOnlyPct, Ed3SomeCollegePct, Ed4AssocDegreePct, Ed5CollegePlusPct, ForeignBornPct, Net_International_Migration_Rate_2010_2019, NetMigrationRate1019, NaturalChangeRate1019, TotalPopEst2019.x, WhiteNonHispanicPct2010, NativeAmericanNonHispanicPct2010, BlackNonHispanicPct2010, AsianNonHispanicPct2010, HispanicPct2010, Type_2015_Update, RuralUrbanContinuumCode2013, UrbanInfluenceCode2013, Perpov_1980_0711, HiCreativeClass2000, HiAmenity, Retirement_Destination_2015_Update, NonEnglishHHPct, FemaleHHNum, AvgHHSize, log_total_death_per100k)
 ```
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 # Get column names of county_data
 all_columns <- names(county_data)
 
@@ -407,7 +402,7 @@ included_columns <- names(county_data_sub)
 not_included_columns <- setdiff(all_columns, included_columns)
 
 # Display the columns not included
-not_included_columns
+# not_included_columns
 ```
 
 We added the variables NonEnglishHHPct, FemaleHHNum, and AvgHHSize to the existing model variables. For example, we thought higher average household sizes might lead to more viral spread and therefore more deaths. So now, county_data_sub has 45 variables. We also included the response variable, log_total_death_per100k, for when we eventually will run a regression on the data.
@@ -418,7 +413,7 @@ a)  Report missing values in your final subset of variables.
 
 We found 174 rows with NA values.
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 rows_with_na <- county_data_sub[apply(is.na(county_data_sub), 1, any), ]
 dim(rows_with_na) # 174 rows have NA values
 ```
@@ -429,7 +424,7 @@ b)  In the following anaylsis, you may ignore the missing values.
 
 After omitting the NA rows, we have 3,105 rows left in county_data_sub.
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 # see number of rows before removing NAs
 # had 3279 rows before
 dim(county_data_sub)
@@ -447,19 +442,19 @@ iii) Use LASSO to choose a parsimonious model with all available sensible county
 
 We need to force in state so that all levels of this factor variable must be included, so no penalties on those betas. This way, none of the states get omitted from the LASSO model. We use penalty factor in the code for this. After we run the model using lambda.1se (for a smaller model), we see all of the states included in selected_vars.
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 # make 'State.x' a factor
 county_data_sub <- county_data_sub %>%
   mutate(State.x = as.factor(State.x))
 
 # Check the structure of county_data_sub after mutation
-str(county_data_sub)
+# str(county_data_sub)
 
 unique_states <- levels(county_data_sub$State.x)
-unique_states
+# unique_states
 ```
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 
 Y <- as.matrix(county_data_sub[, 45]) # extract Y
 X.fl <- model.matrix(log_total_death_per100k~., data=county_data_sub)[, -1]
@@ -476,7 +471,7 @@ fit.fl.force.cv <- cv.glmnet(X.fl, Y, alpha = 1, nfolds = 10, intercept = TRUE,
 coef.force.min <- coef(fit.fl.force.cv, s="lambda.1se")
 var.force.min <- coef.force.min[which(coef.force.min !=0),]  
 selected_vars <- rownames(as.matrix(var.force.min))[-1]
-selected_vars
+# selected_vars
 
 ```
 
@@ -484,7 +479,7 @@ iv) Use a quick backward elimination to fine tune the LASSO model from iii). Aga
 
 We ran a backward elimination by removing the highest p-value variables in each iteration one by one until no p-value was greater than 0.05. We set this final model, fit6 to be our final.fit mode. We didn't remove any state from anything. In final.fit, all p-values are less than 0.05.
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 # backward elimination step
 
 # filter out variables starting with "State.x", since the categories are not columns in the dataframe
@@ -495,36 +490,36 @@ selected_vars_cleaned <- c("State.x", selected_vars_cleaned)
 
 lm.input <- as.formula(paste("log_total_death_per100k", "~", paste(selected_vars_cleaned, collapse = " + "))) 
 fit.min.lm <- lm(lm.input, data=county_data_sub)
-Anova(fit.min.lm) #kick PovertyAllAgesPct out
+# Anova(fit.min.lm) #kick PovertyAllAgesPct out
 fit2 <- update(fit.min.lm, .~. -PovertyAllAgesPct, county_data_sub)
-Anova(fit2) # kick NonEnglishHHPctout
+# Anova(fit2) # kick NonEnglishHHPctout
 fit3 <- update(fit2, .~. -NonEnglishHHPct)
-Anova(fit3) #kick PctEmpManufacturing out
+# Anova(fit3) #kick PctEmpManufacturing out
 fit4 <- update(fit3, .~. -PctEmpManufacturing)
-Anova(fit4) #kick PctEmpTrade out
+# Anova(fit4) #kick PctEmpTrade out
 fit5 <- update(fit4, .~. -PctEmpTrade)
-Anova(fit5) #kick PerCapitaInc out
+# Anova(fit5) #kick PerCapitaInc out
 fit6 <- update(fit5, .~. -PerCapitaInc)
 Anova(fit6) # we will stop here, since all p values are less than 0.05
 ```
 
 Finally fit our final model
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 final.fit <- fit6
-summary(final.fit)
+# summary(final.fit)
 ```
 
 v)  If necessary, reduce the model from iv) to a final model with all variables being significant at 0.05 level. Are the linear model assumptions all reasonably met?
 
 We have ensured that all variables have less than 0.05 as their p-value when doing the backward elimination step, and we forced in State (so even though some states have large p-values, we force them in, but all other non-state variables have low p-values). To test if the linear model assumptions are reasonably met, we run residuals vs fitted, as well as the Q-Q residuals test. We can see in residuals vs fitted that the values are spread out randomly, with some positives and some negatives, along with random variance. In the Q-Q residuals test, we see a generally positive linear relationship among the points. Thus, our model fits the linear model assumptions reasonable with linearity and homoscedasticity. We see a couple of abnormalities, however: in the residuals vs fitted plot, we see a negatively sloped line of a few points, but overall the points are random and evenly spread. In the Q-Q plot, there is a wave in the generally positively sloped line, but overall the Q-Q plot fits the linear model assumption expectations. We believe these abnormalities might be due to forcing State in.
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 par(mfrow=c(1,2), mar=c(5,2,4,2), mgp=c(3,0.5,0)) # plot(final.fit) produces several plots
 plot(final.fit, 1, pch=16) # residual plot
 abline(h=0, col="blue", lwd=2)
 plot(final.fit, 2) # qqplot
-summary(final.fit)
+# summary(final.fit)
 ```
 
 vi) It has been shown that COVID affects elderly the most. It is also claimed that the COVID death rate among African Americans and Latinos is higher. Does your analysis support these arguments?
@@ -533,9 +528,9 @@ Looking at the summary of our final.fit LASSO model, we can see that the variabl
 
 In terms of African Americans, that variable was not included in our LASSO model when we used lambda.1se. However, we have also run a separate linear model of log_total_death_per100k versus BlackNonHispanicPct2010. Our one-variable linear model with BlackNonHispanicPct2010 gave a positive beta estimate of 0.01305, with a p-value \<2e-16 \*\*\*. This suggests that there is a positive correlation between percentage of African American people and the number of (log) deaths per 100k, since we have a positive beta value, though it has a pretty small magnitude. Thus, our analysis more strongly supports the claims about COVID affecting the elderly and Hispanic populations, rather than the African American population.
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 lm_afr_american <- lm(log_total_death_per100k ~ BlackNonHispanicPct2010, data=county_data_sub)
-summary(lm_afr_american)
+# summary(lm_afr_american)
 ```
 
 vii) Based on your final model, summarize your findings. In particular, summarize the state effect controlling for others. Provide intervention recommendations to policy makers to reduce COVID death rate.
@@ -566,17 +561,12 @@ ix) (Optional) Would your findings be very different if you had refined the data
 
 -   Limitations: To improve our model, we could have included some extra information, like the African American population percentage. The model could also be improved with more COVID-specific data, such as vaccination records based on the first dose, second dose, and booster, types of vaccines administered, data regarding masking and social distancing, and more. Our final model also could have had an income variable, or median household income, to analyze the economic impacts on the death rate. These other variables could be more informative for our LASSO model.
 
-# Potential final projects
+# Appendix 0: Intermediate Results
+```{r}
+summary(final.fit)
+summary(lm_afr_american)
+```
 
-## Does the govenment lockdown policy work in reducing covid death rates?
-
-Please talk to Linda if interested in this.
-
-You may use the available data together with `covid_intervention` as well as more potential data not included here.
-
-## Do vaccinations help reducing death rates from `COVID`?
-
-Please talk to Linda if interested in this.
 
 # Appendix 1: Data description
 
@@ -914,7 +904,7 @@ Type of county (rural or urban on a rural-urban continuum scale)
 
 The raw data sets are dirty and need transforming before we can do our EDA. It takes time and efforts to clean and merge different data sources so we provide the final output of the cleaned and merged data. The cleaning procedure is as follows. Please read through to understand what is in the cleaned data. We set `eval = data_cleaned` in the following cleaning chunks so that these cleaning chunks will only run if any of `data/covid_county.csv`, `data/covid_rates.csv` or `data/covid_intervention.csv` does not exist.
 
-```{r}
+```{r, echo=F, warning=F, message=F}
 # Indicator to check whether the data files exist
 data_cleaned <- !(file.exists("data/covid_county.csv") & 
                     file.exists("data/covid_rates.csv") & 

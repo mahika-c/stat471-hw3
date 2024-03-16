@@ -22,8 +22,10 @@ output:
     toc: yes
     toc_depth: '4'
 urlcolor: blue
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
-
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, results = "hide", fig.width=8, fig.height=4)
@@ -34,112 +36,123 @@ pacman::p_load(bestglm, glmnet, leaps, car, tidyverse, pROC, caret) # add the pa
 
 \pagebreak
 
+# PartI: Model Building
 
+Multiple regression is one of the most popular methods used in
+statistics as well as in machine learning. We use linear models as a
+working model for its simplicity and interpretability. It is important
+that we use domain knowledge as much as we could to determine the form
+of the response as well as the function format for the factors. Then,
+when we have many possible features to be included in the working model
+it is inevitable that we need to choose a best possible model with a
+sensible criterion. Regularizations such as LASSO are introduced. Be
+aware that if a model selection is done formally or informally, the
+inferences obtained with the final `lm()` fit may not be valid. Some
+adjustment will be needed. This last step is beyond the scope of this
+class. Check the research line that Linda and collaborators have been
+working on.
 
-# PartI: Model Building 
+The main job in this part is a rather involved case study about
+devastating covid19 pandemic. Please read through the case study first.
+This project is for sure a great one listed in your CV.
 
-Multiple regression is one of the most popular methods used in statistics as well as in machine learning. We use linear models as a working model for its simplicity and interpretability. It is important that we use domain knowledge as much as we could to determine the form of the response as well as the function format for the factors. Then, when we have many possible features to be included in the working model it is inevitable that we need to choose a best possible model with a sensible criterion. Regularizations such as LASSO are introduced. Be aware that if a model selection is done formally or informally, the inferences obtained with the final `lm()` fit may not be valid. Some adjustment will be needed. This last step is beyond the scope of this class. Check the  research line that Linda and collaborators have been working on. 
-
-The main job in this part is a rather involved case study about devastating covid19 pandemic.  Please read through the case study first.  This project is for sure a great one listed in your CV. 
-
-For covid case study, the major time and effort would be needed in EDA portion.
+For covid case study, the major time and effort would be needed in EDA
+portion.
 
 ## Objectives
 
-- Model building process
+-   Model building process
 
-- Methods
-    - Model selection
-        + LASSO (L1 penalty)
-        + A quick backward elimination
-        
-- Understand the criteria 
-    - Testing Errors
-    - `K fold Cross Validation`
-    - `LASSO` 
-- Packages
-    - `lm()`, `Anova`
-    - `regsubsets()`
-    - `glmnet()` & `cv.glmnet()`
+-   Methods
+
+    -   Model selection
+        -   LASSO (L1 penalty)
+        -   A quick backward elimination
+
+-   Understand the criteria
+
+    -   Testing Errors
+    -   `K fold Cross Validation`
+    -   `LASSO`
+
+-   Packages
+
+    -   `lm()`, `Anova`
+    -   `regsubsets()`
+    -   `glmnet()` & `cv.glmnet()`
 
 ## Review materials
 
-- Study lecture: Regularization
-- Study lecture: Multiple regression
+-   Study lecture: Regularization
+-   Study lecture: Multiple regression
 
-Review the code and concepts covered during lectures: multiple regression, penalized regression through elastic net (only LSASSO). 
+Review the code and concepts covered during lectures: multiple
+regression, penalized regression through elastic net (only LSASSO).
 
-**Important Notice:** The focus of this part is Covid case study. 
+**Important Notice:** The focus of this part is Covid case study.
 
 ## Case study: COVID19
 
-See a seperate file covid_case_study_2024.Rmd for details. 
+See a seperate file covid_case_study_2024.Rmd for details.
 
-* Start the EDA as earlier as possible.
-* Please check previous midterms where we used the same dataset. 
- 
-
+-   Start the EDA as earlier as possible.
+-   Please check previous midterms where we used the same dataset.
 
 # Part II: Logistic Regression
 
-Logistic regression is used for modeling categorical response variables. The simplest scenario is how to identify risk factors of heart disease? In this case the response takes a possible value of `YES` or `NO`. Logit link function is used to connect the probability of one being a heart disease with other potential risk factors such as `blood pressure`, `cholestrol level`, `weight`. Maximum likelihood function is used to estimate unknown parameters. Inference is made based on the properties of MLE. We use AIC to help nailing down a useful final model. Predictions in categorical response case is also termed as `Classification` problems. One immediately application of logistic regression is to provide a simple yet powerful classification boundaries. Various metrics/criteria are proposed to evaluate the quality of a classification rule such as `False Positive`, `FDR` or `Mis-Classification Errors`. 
+Logistic regression is used for modeling categorical response variables.
+The simplest scenario is how to identify risk factors of heart disease?
+In this case the response takes a possible value of `YES` or `NO`. Logit
+link function is used to connect the probability of one being a heart
+disease with other potential risk factors such as `blood pressure`,
+`cholestrol level`, `weight`. Maximum likelihood function is used to
+estimate unknown parameters. Inference is made based on the properties
+of MLE. We use AIC to help nailing down a useful final model.
+Predictions in categorical response case is also termed as
+`Classification` problems. One immediately application of logistic
+regression is to provide a simple yet powerful classification
+boundaries. Various metrics/criteria are proposed to evaluate the
+quality of a classification rule such as `False Positive`, `FDR` or
+`Mis-Classification Errors`.
 
-LASSO with logistic regression is a powerful tool to get dimension reduction. We will not use it here in this work. 
-
+LASSO with logistic regression is a powerful tool to get dimension
+reduction. We will not use it here in this work.
 
 ## Objectives
 
-- Understand the model
-  - logit function
-    + interpretation
-  - Likelihood function
-- Methods
-    - Maximum likelihood estimators
-        + Z-intervals/tests
-        + Chi-squared likelihood ratio tests
-- Metrics/criteria 
-    - Sensitivity/False Positive
-    - True Positive Prediction/FDR
-    - Misclassification Error/Weighted MCE
-    - Residual deviance
-    - Training/Testing errors
+-   Understand the model
+    -   logit function
+        -   interpretation
+    -   Likelihood function
+-   Methods
+    -   Maximum likelihood estimators
+        -   Z-intervals/tests
+        -   Chi-squared likelihood ratio tests
+-   Metrics/criteria
+    -   Sensitivity/False Positive
+    -   True Positive Prediction/FDR
+    -   Misclassification Error/Weighted MCE
+    -   Residual deviance
+    -   Training/Testing errors
+-   R functions/Packages
+    -   `glm()`, `Anova`
+    -   `pROC`
+-   Data needed
+    -   `Framingham.dat`
 
-- R functions/Packages
-    - `glm()`, `Anova`
-    - `pROC`
+## Framingham heart disease study
 
-- Data needed
-    - `Framingham.dat`
-  
-## R Markdown / Knitr tips
+We will continue to use the Framingham Data (`Framingham.dat`) so that
+you are already familiar with the data and the variables. All the
+results are obtained through training data.
 
-You should think of this R Markdown file as generating a polished report, one that you would be happy to show other people (or your boss). There shouldn't be any extraneous output; all graphs and code run should clearly have a reason to be run. That means that any output in the final file should have explanations.
+Liz is a patient with the following readings:
+`AGE=50, GENDER=FEMALE, SBP=110, DBP=80, CHOL=180, FRW=105, CIG=0`. We
+would be interested to predict Liz's outcome in heart disease.
 
-A few tips:
-
-* Keep each chunk to only output one thing! In R, if you're not doing an assignment (with the `<-` operator), it's probably going to print something.
-* If you don't want to print the R code you wrote (but want to run it, and want to show the results), use a chunk declaration like this: `{r, echo=F}`. Notice this is set as a global option. 
-* If you don't want to show the results of the R code or the original code, use a chunk declaration like: `{r, include=F}`
-* If you don't want to show the results, but show the original code, use a chunk declaration like: `{r, results='hide'}`.
-* If you don't want to run the R code in a chunk at all use `{r, eval = F}`.
-* We show a few examples of these options in the below example code. 
-* For more details about these R Markdown options, see the [documentation](http://yihui.name/knitr/options/).
-* Delete the instructions and this R Markdown section, since they're not part of your overall report.
-
-## Review
-
-Review the code and concepts covered in
-
-* Module Logistic Regressions/Classification
-
-
-## Framingham heart disease study 
-
-We will continue to use the Framingham Data (`Framingham.dat`) so that you are already familiar with the data and the variables. All the results are obtained through training data. 
-
-Liz is a patient with the following readings: `AGE=50, GENDER=FEMALE, SBP=110, DBP=80, CHOL=180, FRW=105, CIG=0`. We would be interested to predict Liz's outcome in heart disease. 
-
-To keep our answers consistent, use a subset of the data, and exclude anyone with a missing entry. For your convenience, we've loaded it here together with a brief summary about the data.
+To keep our answers consistent, use a subset of the data, and exclude
+anyone with a missing entry. For your convenience, we've loaded it here
+together with a brief summary about the data.
 
 ```{r data preparation, include=F}
 # Notice that we hide the code and the results here
@@ -158,7 +171,9 @@ hd_data <- hd_data[-1407,]  # take out the last row
 hd_data.f <- na.omit(hd_data)
 ```
 
-We note that this dataset contains 311 people diagnosed with heart disease and 1095 without heart disease.
+We note that this dataset contains 311 people diagnosed with heart
+disease and 1095 without heart disease.
+
 ```{r table heart disease, echo = F, comment = " ", results = T}
 # we use echo = F to avoid showing this R code
 # notice the usage of comment = " " here in the header
@@ -166,12 +181,14 @@ table(hd_data$HD) # HD: 311 of "0" and 1095 "1"
 ```
 
 After a quick cleaning up here is a summary about the data:
+
 ```{r data summary, comment=" "}
 # using the comment="     ", we get rid of the ## in the output.
 summary(hd_data.f)
 ```
 
-Lastly we would like to show five observations randomly chosen. 
+Lastly we would like to show five observations randomly chosen.
+
 ```{r, results = T, comment=" "}
 row.names(hd_data.f) <- 1:1393
 set.seed(471)
@@ -184,9 +201,14 @@ hd_data.f[indx, ]
 ### Identify risk factors
 
 #### Understand the likelihood function
-Conceptual questions to understand the building blocks of logistic regression. All the codes in this part should be hidden. We will use a small subset to run a logistic regression of `HD` vs. `SBP`. 
 
-i. Take a random subsample of size 5 from `hd_data_f` which only includes `HD` and `SBP`. Also set  `set.seed(471)`. List the five observations neatly below. No code should be shown here.
+Conceptual questions to understand the building blocks of logistic
+regression. All the codes in this part should be hidden. We will use a
+small subset to run a logistic regression of `HD` vs. `SBP`.
+
+i.  Take a random subsample of size 5 from `hd_data_f` which only
+    includes `HD` and `SBP`. Also set `set.seed(471)`. List the five
+    observations neatly below. No code should be shown here.
 
 ```{r, echo=F}
 row.names(hd_data.f) <- 1:1393
@@ -195,18 +217,23 @@ indx <- sample(1393, 5)
 hd_data.f[indx, c(1, 4)]
 ```
 
-
-ii. Write down the likelihood function using the five observations above.
+ii. Write down the likelihood function using the five observations
+    above.
 
 $$P(HD=1\vert SBP) = \frac{e^{\beta_0 + \beta_1 SBP}}{1+e^{\beta_0+\beta_1 SBP}}$$
-The likelihood function = Prob(All events in data occurred)=P((y1 = 1, x1 = 140) ^ (y2 = 0, x2 = 110) ^ (y3 = 1, x3 = 150) ^ (y4 = 1, x4 = 260) ^ (y5 = 0, x5 = 122))
-Since these are independent observations, we can multiply them:
-=P(y1 = 1, x1 = 140) * P(y2 = 0, x2 = 110) * P(y3 = 1, x3 = 150) * P(y4 = 1, x4 = 260) * P(y5 = 0, x5 = 122)
+The likelihood function = Prob(All events in data occurred)=P((y1 = 1,
+x1 = 140) \^ (y2 = 0, x2 = 110) \^ (y3 = 1, x3 = 150) \^ (y4 = 1, x4 =
+260) \^ (y5 = 0, x5 = 122)) Since these are independent observations, we
+can multiply them: =P(y1 = 1, x1 = 140) \* P(y2 = 0, x2 = 110) \* P(y3 =
+1, x3 = 150) \* P(y4 = 1, x4 = 260) \* P(y5 = 0, x5 = 122)
 $$lik(\beta_0, \beta_1 \vert data) = \frac{e^{\beta_0+\beta_1 140}}{1+e^{\beta_0+\beta_1 140}} \times \frac{1}{1+e^{\beta_0+\beta_1 110}} \times \frac{e^{\beta_0+\beta_1 150}}{1+e^{\beta_0+\beta_1 150}} \times \frac{e^{\beta_0+\beta_1 260}}{1+e^{\beta_0+\beta_1 260}} \times \frac{1}{1+e^{\beta_0+\beta_1 122}} $$
 
-iii. Find the MLE based on this subset using glm(). Report the estimated logit function of `SBP` and the probability of `HD`=1. Briefly explain how the MLE are obtained based on ii. above.
+iii. Find the MLE based on this subset using glm(). Report the estimated
+     logit function of `SBP` and the probability of `HD`=1. Briefly
+     explain how the MLE are obtained based on ii. above.
 
-The MLE is obtained by finding a B1 and B0 that maximize the likelihood function above:
+The MLE is obtained by finding a B1 and B0 that maximize the likelihood
+function above:
 
 $$(\hat \beta_1, \hat \beta_0) = \arg\max_{\beta_0, \beta_1} \mathcal{L}(\beta_0, \beta_1 \vert Data)$$
 
@@ -216,22 +243,24 @@ summary(fit1)
 ```
 
 Look at the fit1 applied to the five random samples from above:
+
 ```{r, echo=F}
 fit1$fitted.values[indx]
 ```
 
+-   logit = -3.66 + 0.0159 SBP
 
-- logit = -3.66 + 0.0159 SBP
-
-- $$\begin{split}
-\hat P(HD = 1 \vert SBP) &= \frac{e^{-3.66+0.0159 \times  SBP}}{1+e^{-3.66+0.0159 \times SBP}} \\
-\hat P(HD = 0 \vert SBP) &= \frac{1}{1+e^{-3.66+0.0159 \times SBP}}
-\end{split}$$
+-   $$\begin{split}
+    \hat P(HD = 1 \vert SBP) &= \frac{e^{-3.66+0.0159 \times  SBP}}{1+e^{-3.66+0.0159 \times SBP}} \\
+    \hat P(HD = 0 \vert SBP) &= \frac{1}{1+e^{-3.66+0.0159 \times SBP}}
+    \end{split}$$
 
 iv. Evaluate the probability of Liz having heart disease.
 
-Liz is a patient with the following readings: `AGE=50, GENDER=FEMALE, SBP=110, DBP=80, CHOL=180, FRW=105, CIG=0`.
-Since our logit function is only based on SBP, we can calculate her probability of having HD as follows:
+Liz is a patient with the following readings:
+`AGE=50, GENDER=FEMALE, SBP=110, DBP=80, CHOL=180, FRW=105, CIG=0`.
+Since our logit function is only based on SBP, we can calculate her
+probability of having HD as follows:
 
 ```{r}
 liz <- c(HD = -1, AGE=50, SEX="FEMALE", SBP=110, DBP=80, CHOL=180, FRW=105, CIG=0)
@@ -244,15 +273,19 @@ Based on fit1 we plug in `SBP` value into the prob equation.
 $$\hat P(HD = 1 \vert SBP=110) = \frac{e^{-3.66+0.0159 \times  SBP}}{1+e^{-3.66+0.0159 \times SBP}} =  \frac{e^{-3.66+0.0159 \times  110}}{1+e^{-3.66+0.0159 \times 110}} \approx 0.128$$
 
 We can also use the `predict()` function. We see that we also get 0.128.
+
 ```{r results=TRUE}
 fit1.predict <- predict(fit1, liz, type="response") 
 fit1.predict
 ```
 
-
 #### Identify important risk factors for `Heart.Disease.`
 
-We focus on understanding the elements of basic inference method in this part. Let us start a fit with just one factor, `SBP`, and call it `fit1`. We then add one variable to this at a time from among the rest of the variables. For example
+We focus on understanding the elements of basic inference method in this
+part. Let us start a fit with just one factor, `SBP`, and call it
+`fit1`. We then add one variable to this at a time from among the rest
+of the variables. For example
+
 ```{r, results='hide'}
 fit1 <- glm(HD~SBP, hd_data.f, family=binomial)
 summary(fit1)
@@ -272,11 +305,17 @@ fit1.6 <- glm(HD~SBP + AGE + DBP + CHOL + FRW + CIG + SEX, hd_data.f, family=bin
 summary(fit1.6)
 ```
 
-i. Which single variable would be the most important to add?  Add it to your model, and call the new fit `fit2`.  
+i.  Which single variable would be the most important to add? Add it to
+    your model, and call the new fit `fit2`.
 
-We will pick up the variable either with highest $|z|$ value, or smallest $p$ value. Report the summary of your `fit2` Note: One way to keep your output neat, we will suggest you using `xtable`. And here is the summary report looks like.
+We will pick up the variable either with highest $|z|$ value, or
+smallest $p$ value. Report the summary of your `fit2` Note: One way to
+keep your output neat, we will suggest you using `xtable`. And here is
+the summary report looks like.
 
-We added sex because according to our final model from above (fit1.6), sex has the lowest p-value. 
+We added sex because according to our final model from above (fit1.6),
+sex has the lowest p-value.
+
 ```{r the most important addition, results='asis', comment="   "}
 ## How to control the summary(fit2) output to cut some junk?
 ## We could use packages: xtable or broom. 
@@ -287,39 +326,54 @@ fit2 <- glm(HD~SBP + AGE + SEX, hd_data.f, family=binomial)
 data.frame(xtable(fit2))
 ```
 
-ii. Is the residual deviance of `fit2` always smaller than that of `fit1`? Why or why not?
+ii. Is the residual deviance of `fit2` always smaller than that of
+    `fit1`? Why or why not?
 
-The residual deviance for fit1 was 1417.5; the residual deviance for fit2 was 1357.9. The residual deviance will always decrease as the number of variables included increases, but it is not always the best idea to include all of the variables since the data will be "overfitted" by the model.
+The residual deviance for fit1 was 1417.5; the residual deviance for
+fit2 was 1357.9. The residual deviance will always decrease as the
+number of variables included increases, but it is not always the best
+idea to include all of the variables since the data will be "overfitted"
+by the model.
 
 ```{r, echo=F}
 summary(fit1)
 summary(fit2)
 ```
 
-  
-iii. Perform both the Wald test and the Likelihood ratio tests (Chi-Squared) to see if the added variable is significant at the .01 level.  What are the p-values from each test? Are they the same? 
+iii. Perform both the Wald test and the Likelihood ratio tests
+     (Chi-Squared) to see if the added variable is significant at the
+     .01 level. What are the p-values from each test? Are they the same?
 
-We do a Wald test. We can see that Sex is significant at alpha=0.01 since it has a p-value of 1.6e-10.
+We do a Wald test. We can see that Sex is significant at alpha=0.01
+since it has a p-value of 1.6e-10.
+
 ```{r, echo=F}
 summary(fit2)
 ```
 
-
 From anova, we can see that fit1 and fit2 are significantly different.
+
 ```{r, echo=F}
 anova(fit1, fit2, test="Chisq")
 ```
-Anova on fit2 tells us that the p-value for sex is significant at alpha=0.01 (6.0e-11), which is smaller than the p-value found from the Wald test (1.6e-10).
+
+Anova on fit2 tells us that the p-value for sex is significant at
+alpha=0.01 (6.0e-11), which is smaller than the p-value found from the
+Wald test (1.6e-10).
+
 ```{r, echo=F}
 Anova(fit2)
 ```
 
+#### Model building
 
-####  Model building
+Start with all variables. Our goal is to fit a well-fitting model, that
+is still small and easy to interpret (parsimonious).
 
-Start with all variables. Our goal is to fit a well-fitting model, that is still small and easy to interpret (parsimonious).
-
-i. Use backward selection method. Only keep variables whose coefficients are significantly different from 0 at .05 level. Kick out the variable with the largest p-value first, and then re-fit the model to see if there are other variables you want to kick out.
+i.  Use backward selection method. Only keep variables whose
+    coefficients are significantly different from 0 at .05 level. Kick
+    out the variable with the largest p-value first, and then re-fit the
+    model to see if there are other variables you want to kick out.
 
 ```{r, echo=F}
 fit_a <- glm(HD~SBP + AGE + DBP + CHOL + FRW + CIG + SEX, hd_data.f, family=binomial)
@@ -335,9 +389,14 @@ fit_final <- glm(HD~SBP + AGE + CHOL + SEX, hd_data.f, family=binomial)
 summary(fit_final)
 ```
 
-ii. Use AIC as the criterion for model selection. Find a model with small AIC through exhaustive search. Does exhaustive search  guarantee that the p-values for all the remaining variables are less than .05? Is our final model here the same as the model from backwards elimination? 
+ii. Use AIC as the criterion for model selection. Find a model with
+    small AIC through exhaustive search. Does exhaustive search
+    guarantee that the p-values for all the remaining variables are less
+    than .05? Is our final model here the same as the model from
+    backwards elimination?
 
 We use bestglm() to find the model with the smallest AIC:
+
 ```{r results=TRUE}
 # Get the design matrix without 1's and HD
 Xy_design <- model.matrix(HD ~.+0, hd_data.f) 
@@ -348,15 +407,22 @@ fit.all <- bestglm(Xy, family = binomial, method = "exhaustive", IC="AIC", nvmax
 names(fit.all) # fit.all$Subsets to list best submodels
 ```
 
-List the top 5 models. In the way any one of the following model could be used. 
+List the top 5 models. In the way any one of the following model could
+be used.
+
 ```{r results=TRUE}
 fit.all$BestModels  
 ```
 
-We run a summary and Anova based on the first row from BestModels, which has the lowest AIC value.
-We can see that our exhaustive search does NOT guarantee that the p-values for all the remaining variables are less than .05. For instance, FRW has p-value of 0.1315 from the Wald's test and 0.1336 from the Chi-squared test.
+We run a summary and Anova based on the first row from BestModels, which
+has the lowest AIC value. We can see that our exhaustive search does NOT
+guarantee that the p-values for all the remaining variables are less
+than .05. For instance, FRW has p-value of 0.1315 from the Wald's test
+and 0.1336 from the Chi-squared test.
 
-Our final model from the exhaustive search is not the same as that from our backwards elimination from above since here we included two extra variables: FRW and CIG.
+Our final model from the exhaustive search is not the same as that from
+our backwards elimination from above since here we included two extra
+variables: FRW and CIG.
 
 ```{r results=TRUE}
 fit_aic_final <- glm(HD~AGE+SEX+SBP+CHOL+FRW+CIG, family=binomial, data=hd_data.f)
@@ -364,43 +430,75 @@ summary(fit_aic_final)
 Anova(fit_aic_final)
 ```
 
-iii. Use the model chosen from part ii. as the final model. Write a brief summary to describe important factors relating to Heart Diseases (i.e. the relationships between those variables in the model and heart disease). Give a definition of “important factors”.
+iii. Use the model chosen from part ii. as the final model. Write a
+     brief summary to describe important factors relating to Heart
+     Diseases (i.e. the relationships between those variables in the
+     model and heart disease). Give a definition of “important factors”.
 
+In the context of the final model from the exhaustive search, "important
+factors" refer to the variables (AGE, SEX, SBP, CHOL, FRW, CIG) and
+their coefficients that are statistically significant in predicting the
+likelihood of heart disease. These variables are all positively
+correlated with heart disease since they have positive B-values.
+Overall, all are statistically significant at alpha = 0.05, except FRW.
+We see a low AIC of 1357, which suggests our model is parsimonious.
 
-In the context of the final model from the exhaustive search, "important factors" refer to the variables (AGE, SEX, SBP, CHOL, FRW, CIG) and their coefficients that are statistically significant in predicting the likelihood of heart disease. These variables are all positively correlated with heart disease since they have positive B-values. Overall, all are statistically significant at alpha = 0.05, except FRW. We see a low AIC of 1357, which suggests our model is parsimonious.
+AGE (0.06153): For each additional year of age, the log odds of having
+heart disease increase by 0.06153, assuming all other variables are held
+constant.
 
-AGE (0.06153): For each additional year of age, the log odds of having heart disease increase by 0.06153, assuming all other variables are held constant.
+SEX (0.91127 for male): Being male (SEXMALE) increases the log odds of
+having heart disease by 0.91127 compared to being female, assuming all
+other variables are held constant.
 
-SEX (0.91127 for male): Being male (SEXMALE) increases the log odds of having heart disease by 0.91127 compared to being female, assuming all other variables are held constant.
+SBP (0.01597): For each additional unit increase in systolic blood
+pressure (SBP), the log odds of having heart disease increase by
+0.01597, assuming all other variables are held constant.
 
-SBP (0.01597): For each additional unit increase in systolic blood pressure (SBP), the log odds of having heart disease increase by 0.01597, assuming all other variables are held constant.
+CHOL (0.00449): For each additional unit increase in cholesterol (CHOL)
+level, the log odds of having heart disease increase by 0.00449,
+assuming all other variables are held constant.
 
-CHOL (0.00449): For each additional unit increase in cholesterol (CHOL) level, the log odds of having heart disease increase by 0.00449, assuming all other variables are held constant.
+FRW (0.00604): The log odds of having heart disease increase by 0.00604
+for each unit increase in FRW, assuming all other variables are held
+constant. However, FRW is not statistically significant at an alpha =
+0.05 (FRW p-value = 0.1315).
 
-FRW (0.00604): The log odds of having heart disease increase by 0.00604 for each unit increase in FRW, assuming all other variables are held constant. However, FRW is not statistically significant at an alpha = 0.05 (FRW p-value = 0.1315).
+CIG (0.01228): For each additional unit increase in cigarette
+consumption (CIG), the log odds of having heart disease increase by
+0.01228, assuming all other variables are held constant. CIG is
+marginally significant but still under the alpha = 0.05 level (p-value =
+0.0437).
 
-CIG (0.01228): For each additional unit increase in cigarette consumption (CIG), the log odds of having heart disease increase by 0.01228, assuming all other variables are held constant. CIG is marginally significant but still under the alpha = 0.05 level (p-value = 0.0437).
+From this summary, we can conclude that age, sex (male), systolic blood
+pressure (SBP), and cholesterol (CHOL) are important factors
+significantly associated with the likelihood of heart disease, based on
+our final model.
 
-From this summary, we can conclude that age, sex (male), systolic blood pressure (SBP), and cholesterol (CHOL) are important factors significantly associated with the likelihood of heart disease, based on our final model.
+iv. What is the probability that Liz will have heart disease, according
+    to our final model?
 
-iv. What is the probability that Liz will have heart disease, according to our final model?
+We can also use the `predict()` function. We see that her probability of
+having HD is 0.0459. This is lower from our previous prediction of
+0.128.
 
-We can also use the `predict()` function. We see that her probability of having HD is 0.0459. This is lower from our previous prediction of 0.128.
 ```{r results=TRUE}
 fit_aic_final.predict <- predict(fit_aic_final, liz, type="response") 
 fit_aic_final.predict
 ```
 
-###  Classification analysis
+### Classification analysis
 
 #### ROC/FDR
 
-i. Display the ROC curve using `fit1`. Explain what ROC reports and how to use the graph. Specify the classifier such that the False Positive rate is less than .1 and the True Positive rate is as high as possible.
+i.  Display the ROC curve using `fit1`. Explain what ROC reports and how
+    to use the graph. Specify the classifier such that the False
+    Positive rate is less than .1 and the True Positive rate is as high
+    as possible.
 
-Sensitivity = TP rate
-Specificity = 1 - FP
+Sensitivity = TP rate Specificity = 1 - FP
 
-We want FPR to be < 0.1, so we want want specificity to be > 0.9. 
+We want FPR to be \< 0.1, so we want want specificity to be \> 0.9.
 
 ```{r, echo=F}
 fit1.roc<- roc(hd_data.f$HD, fit1$fitted, plot=T, col="blue")
@@ -409,9 +507,9 @@ plot(fit1.roc)
 fit1.roc$auc
 ```
 
+We can find the thresholds from `fit1.roc`.
 
-We can find the thresholds from `fit1.roc`. 
-```{r}
+```{r, echo=F}
 fpr_threshold <- 0.1
 index <- which(fit1.roc$specificities > (1 - fpr_threshold))
 optimal_index <- index[which.max(fit1.roc$sensitivities[index])]
@@ -419,35 +517,150 @@ optimal_threshold <- fit1.roc$thresholds[optimal_index]
 optimal_threshold
 ```
 
-We find the corresponding specificity (0.902) and sensitivity (0.215) at the optimal_threshold (0.298).
-```{r}
+We find the corresponding specificity (0.902) and sensitivity (0.215) at
+the optimal_threshold (0.298).
+
+```{r, echo=F}
 fit1.roc$specificities[optimal_index]
 fit1.roc$sensitivities[optimal_index]
 ```
 
-ii. Overlay two ROC curves: one from `fit1`, the other from `fit2`. Does one curve always contain the other curve? Is the AUC of one curve always larger than the AUC of the other one? Why or why not?
+ii. Overlay two ROC curves: one from `fit1`, the other from `fit2`. Does
+    one curve always contain the other curve? Is the AUC of one curve
+    always larger than the AUC of the other one? Why or why not?
 
-iii.  Estimate the Positive Prediction Values and Negative Prediction Values for `fit1` and `fit2` using .5 as a threshold. Which model is more desirable if we prioritize the Positive Prediction values?
+When overlaying ROC curves from the two classifiers, one curve doesn't
+necessarily always contain the other, and the AUC of one curve isn't
+always larger than the other. The ROC curves represent the trade-off
+between true positive rate and false positive rate at different
+classification thresholds, which can vary between classifiers. Thus,
+their overlap, containment, or relative AUC values depend on the
+specific performance characteristics and threshold selections of the
+classifiers being compared. In this specific case, however, one curve
+does contain the other (fit2 contains fit1).
 
-iv.  For `fit1`: overlay two curves,  but put the threshold over the probability function as the x-axis and positive prediction values and the negative prediction values as the y-axis.  Overlay the same plot for `fit2`. Which model would you choose if the set of positive and negative prediction values are the concerns? If you can find an R package to do so, you may use it directly.
+```{r, echo=F}
+fit2.roc<- roc(hd_data.f$HD, fit2$fitted, plot=T, col="blue")
+
+plot(1-fit1.roc$specificities,
+fit1.roc$sensitivities, col="red", lwd=3, type="l",
+xlab="False Positive",
+ylab="Sensitivity")
+
+lines(1-fit2.roc$specificities, fit2.roc$sensitivities, col="blue", lwd=3)
+legend("bottomright",
+c(paste0("fit1 AUC=", round(fit1.roc$auc,2)),
+paste0("fit2 AUC=", round(fit2.roc$auc, 2))),
+col=c("red", "blue"),
+lty=1)
+```
+
+iii. Estimate the Positive Prediction Values and Negative Prediction
+     Values for `fit1` and `fit2` using .5 as a threshold. Which model
+     is more desirable if we prioritize the Positive Prediction values?
+
+For fit1: Positive Prediction Value = 0.45 Negative Prediction Value =
+0.783
+
+For fit2: Positive Prediction Value = 0.415 Negative Prediction Value =
+0.786
+
+Thus, fit1 prioritizes the Positive Prediction values. This is different
+than if we were to use AUC, given that fit2 has a higher AUC than fit1.
+
+```{r, echo=F}
+fit1.pred <- ifelse(fit1$fitted > 1/2, "1", "0")
+cm.fit1 <- table(fit1.pred, hd_data.f$HD) 
+positive.pred1 <- cm.fit1[2,2] / sum(cm.fit1[2,])
+negative.pred1 <- cm.fit1[1,1] / sum(cm.fit1[1,])
+positive.pred1
+negative.pred1
+
+fit2.pred <- ifelse(fit2$fitted > 1/2, "1", "0")
+cm.fit2 <- table(fit2.pred, hd_data.f$HD) 
+positive.pred2 <- cm.fit2[2,2] / sum(cm.fit2[2,])
+negative.pred2 <- cm.fit2[1,1] / sum(cm.fit2[1,])
+positive.pred2
+negative.pred2
+```
+
+iv. For `fit1`: overlay two curves, but put the threshold over the
+    probability function as the x-axis and positive prediction values
+    and the negative prediction values as the y-axis. Overlay the same
+    plot for `fit2`. Which model would you choose if the set of positive
+    and negative prediction values are the concerns? If you can find an
+    R package to do so, you may use it directly.
+
+```{r, echo=F}
+calculate_values <- function(fitted, actual, threshold) {
+  prediction <- ifelse(fitted > threshold, 1, 0)
+  cm <- table(prediction, actual)
+  positive_pred <- if (1 %in% rownames(cm)) cm["1", "1"] / sum(cm["1", ]) else 0
+  negative_pred <- if (0 %in% rownames(cm)) cm["0", "0"] / sum(cm["0", ]) else 0
+  return(c(positive_pred, negative_pred))
+}
+
+thresholds <- seq(0, 1, length.out = 100)
+
+positive_pred1 <- numeric(length(thresholds))
+negative_pred1 <- numeric(length(thresholds))
+positive_pred2 <- numeric(length(thresholds))
+negative_pred2 <- numeric(length(thresholds))
+
+for (i in 1:length(thresholds)) {
+  values1 <- calculate_values(fit1$fitted, hd_data.f$HD, thresholds[i])
+  positive_pred1[i] <- values1[1]
+  negative_pred1[i] <- values1[2]
   
+  values2 <- calculate_values(fit2$fitted, hd_data.f$HD, thresholds[i])
+  positive_pred2[i] <- values2[1]
+  negative_pred2[i] <- values2[2]
+}
+
+df1 <- data.frame(threshold = thresholds, Positive = positive_pred1, Negative = negative_pred1)
+df2 <- data.frame(threshold = thresholds, Positive = positive_pred2, Negative = negative_pred2)
+
+ggplot() +
+  geom_line(data = df1, aes(x = threshold, y = Positive, color = "Positive1")) +
+  geom_line(data = df1, aes(x = threshold, y = Negative, color = "Negative1")) +
+  geom_line(data = df2, aes(x = threshold, y = Positive, color = "Positive2")) +
+  geom_line(data = df2, aes(x = threshold, y = Negative, color = "Negative2")) +
+  labs(title = "Overlayed Plot fit1 and fit2", x = "Threshold", y = "Prediction Value") +
+  scale_color_manual(values = c("Positive1" = "blue", "Positive2" = "purple", "Negative1" = "red", "Negative2" = "orange"))
+```
+
+fit2's curves are consistently higher compared to fit1's curves. If the
+set of positive and negative prediction values are the concerns then we
+would choose fit2 as it is more robust wrt threshold perturbations.
+
 #### Cost function/ Bayes Rule
 
-Bayes rules with risk ratio $\frac{a_{10}}{a_{01}}=10$ or $\frac{a_{10}}{a_{01}}=1$. Use your final model obtained from Part 1 to build a class of linear classifiers.
+Bayes rules with risk ratio $\frac{a_{10}}{a_{01}}=10$ or
+$\frac{a_{10}}{a_{01}}=1$. Use your final model obtained from Part 1 to
+build a class of linear classifiers.
 
+i.  Write down the linear boundary for the Bayes classifier if the risk
+    ratio of $a_{10}/a_{01}=10$.
 
-i.  Write down the linear boundary for the Bayes classifier if the risk ratio of $a_{10}/a_{01}=10$.
+ii. What is your estimated weighted misclassification error for this
+    given risk ratio?
 
-ii. What is your estimated weighted misclassification error for this given risk ratio?
+iii. How would you classify Liz under this classifier?
 
-iii.  How would you classify Liz under this classifier?
+iv. Bayes rule gives us the best rule if we can estimate the probability
+    of `HD-1` accurately. In practice we use logistic regression as our
+    working model. How well does the Bayes rule work in practice? We
+    hope to show in this example it works pretty well.
 
-iv. Bayes rule gives us the best rule if we can estimate the probability of `HD-1` accurately. In practice we use logistic regression as our working model. How well does the Bayes rule work in practice? We hope to show in this example it works pretty well.
+Now, draw two estimated curves where x = threshold, and y =
+misclassification errors, corresponding to the thresholding rule given
+in x-axis.
 
-Now, draw two estimated curves where x = threshold, and y = misclassification errors, corresponding to the thresholding rule given in x-axis.
+v.  Use weighted misclassification error, and set $a_{10}/a_{01}=10$.
+    How well does the Bayes rule classifier perform?
 
-v. Use weighted misclassification error, and set $a_{10}/a_{01}=10$. How well does the Bayes rule classifier perform? 
-
-vi. Use weighted misclassification error, and set $a_{10}/a_{01}=1$. How well does the Bayes rule classifier perform? 
-
-
+```{=html}
+<!-- -->
+```
+vi. Use weighted misclassification error, and set $a_{10}/a_{01}=1$. How
+    well does the Bayes rule classifier perform?
